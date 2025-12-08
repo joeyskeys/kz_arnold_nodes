@@ -180,11 +180,29 @@ bsdf_init {
     AiBSDFInitNormal(bsdf, data->N, true);
 }
 
-bsdf_sample {
+bsdf_eval {
+    auto *data = (vMFDiffuseBSDF*)AiBSDFGetData(bsdf);
 
+    // microflake model should not do this.
+    // but since vMF diffuse now uses lambertian sampling,
+    // we suppose no ray transmit through the surface
+    // not sure if my understanding is correct
+    const float ui = AiV3Dot(data->N, wi);
+    if (ui <= 0.f)
+        return AI_BSDF_LOBE_MASK_NONE;
+
+    // prepare need values
+    AtShaderGlobals* sg = AiShaderGlobals();
+    const auto wo = -sg->Rd;
+    const float uo = AiV3Dot(data->N, wo);
+    AtVector tagent, bitangent;
+    AiV3BuildLocalFrame(tagent, bitangent, data->N);
+    // need some extra tool for vector handling, wether in AtVector?
+
+    const float weight = AiBSDFBumpShadow(data->Ns, data->N, wi) * 
 }
 
-bsdf_eval {
+bsdf_sample {
 
 }
 
